@@ -26,4 +26,6 @@ public interface ProductService {
     List<Product> getProductsByPriceGreaterThan(Double price);
 
     List<String> getAllProductNames();
+
+    List<Product> findProductsWithPriceGreaterThan(Double price);
 }

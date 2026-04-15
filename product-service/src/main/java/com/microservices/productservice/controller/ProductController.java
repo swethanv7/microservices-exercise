@@ -79,4 +79,9 @@ public class ProductController {
         return productService.getAllProductNames();
     }
 
+    @GetMapping("/native/price-greater-than/{price}")
+    public List<Product> getProductsAbovePriceNative(@PathVariable Double price) {
+        return productService.findProductsWithPriceGreaterThan(price);
+    }
+
 }

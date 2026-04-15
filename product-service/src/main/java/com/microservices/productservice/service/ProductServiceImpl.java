@@ -110,6 +110,11 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
+    @Override
+    public List<Product> findProductsWithPriceGreaterThan(Double price) {
+        return productRepository.findProductsWithPriceGreaterThan(price);
+    }
+
     // Method to Validate the Product
     private void validateProduct(Product product) {
         if (product == null) {
