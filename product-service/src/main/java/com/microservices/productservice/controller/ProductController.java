@@ -2,6 +2,7 @@ package com.microservices.productservice.controller;
 
 import com.microservices.productservice.entity.Product;
 import com.microservices.productservice.service.ProductService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,6 +56,27 @@ public class ProductController {
     public ResponseEntity<Boolean> existsProduct(@PathVariable Integer productId) {
         boolean exists = productService.existsProduct(productId);
         return ResponseEntity.ok(exists);
+    }
+    // Pagination + Sorting
+    @GetMapping("/paged")
+    public Page<Product> getAllProductsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return productService.getAllProductsPaged(page, size, sortBy, sortDir);
+    }
+
+    // Java Streams - Filtering
+    @GetMapping("/filter/price-greater-than/{price}")
+    public List<Product> getProductsByPriceGreaterThan(@PathVariable Double price) {
+        return productService.getProductsByPriceGreaterThan(price);
+    }
+
+    // Java Streams - Transforming
+    @GetMapping("/names")
+    public List<String> getAllProductNames() {
+        return productService.getAllProductNames();
     }
 
 }

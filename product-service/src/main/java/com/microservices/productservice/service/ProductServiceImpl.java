@@ -2,6 +2,10 @@ package com.microservices.productservice.service;
 
 import com.microservices.productservice.entity.Product;
 import com.microservices.productservice.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -76,6 +80,34 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public boolean existsProduct(Integer productId) {
         return productRepository.existsById(productId);
+    }
+
+    @Override
+    public Page<Product> getAllProductsPaged(int page, int size, String sortBy, String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return productRepository.findAll(pageable);
+    }
+
+    @Override
+    public List<Product> getProductsByPriceGreaterThan(Double price) {
+        return productRepository.findAll()
+                .stream()
+                .filter(product -> product.getPrice() != null && product.getPrice() > price)
+                .toList();
+    }
+
+    @Override
+    public List<String> getAllProductNames() {
+        return productRepository.findAll()
+                .stream()
+                .map(Product::getName)
+                .toList();
     }
 
     // Method to Validate the Product
