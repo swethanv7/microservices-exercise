@@ -12,7 +12,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer userId;
+    private Integer cartId;
 
     private Integer productId;
 

@@ -16,7 +16,7 @@ public interface CartItemService {
 
     void deleteCartItem(Integer id);
 
-    List<CartItem> getCartItemsByUserId(Integer userId);
+    List<CartItem> getCartItemsByCartId(Integer cartId);
 
     List<CartItem> getCartItemsByProductId(Integer productId);
 

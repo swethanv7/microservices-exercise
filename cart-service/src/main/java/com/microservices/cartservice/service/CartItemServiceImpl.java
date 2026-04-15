@@ -38,7 +38,7 @@ public class CartItemServiceImpl implements CartItemService{
 
         validateCartItem(cartItem);
 
-        existingItem.setUserId(cartItem.getUserId());
+        existingItem.setCartId(cartItem.getCartId());
         existingItem.setProductId(cartItem.getProductId());
         existingItem.setQuantity(cartItem.getQuantity());
 
@@ -52,8 +52,8 @@ public class CartItemServiceImpl implements CartItemService{
     }
 
     @Override
-    public List<CartItem> getCartItemsByUserId(Integer userId) {
-        return cartItemRepository.findByUserId(userId);
+    public List<CartItem> getCartItemsByCartId(Integer cartId) {
+        return cartItemRepository.findByCartId(cartId);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class CartItemServiceImpl implements CartItemService{
             throw new RuntimeException("CartItem cannot be null");
         }
 
-        if (cartItem.getUserId() == null || cartItem.getUserId() <= 0) {
+        if (cartItem.getCartId() == null || cartItem.getCartId() <= 0) {
             throw new RuntimeException("Invalid cartId");
         }
 
