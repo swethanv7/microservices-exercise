@@ -1,5 +1,6 @@
 package com.microservices.cartservice.service;
 
+import com.microservices.cartservice.dto.ProductDto;
 import com.microservices.cartservice.entity.CartItem;
 import com.microservices.cartservice.repository.CartItemRepository;
 import org.springframework.stereotype.Service;
@@ -11,13 +12,29 @@ public class CartItemServiceImpl implements CartItemService{
 
     private final CartItemRepository cartItemRepository;
 
-    public CartItemServiceImpl(CartItemRepository cartItemRepository){
+    private final ProductClient productClient;
+
+    public CartItemServiceImpl(CartItemRepository cartItemRepository,
+                               ProductClient productClient) {
         this.cartItemRepository = cartItemRepository;
+        this.productClient = productClient;
     }
 
     @Override
     public CartItem addCartItem(CartItem cartItem) {
+
         validateCartItem(cartItem);
+
+        ProductDto product = productClient.getProductById(cartItem.getProductId());
+
+        if (product == null) {
+            throw new RuntimeException("Product does not exist with id: " + cartItem.getProductId());
+        }
+
+        if (product.getStock() == null || product.getStock() < cartItem.getQuantity()) {
+            throw new RuntimeException("Insufficient stock for product id: " + cartItem.getProductId());
+        }
+
         return cartItemRepository.save(cartItem);
     }
 
@@ -37,6 +54,16 @@ public class CartItemServiceImpl implements CartItemService{
         CartItem existingItem = getCartItemById(id);
 
         validateCartItem(cartItem);
+
+        ProductDto product = productClient.getProductById(cartItem.getProductId());
+
+        if (product == null) {
+            throw new RuntimeException("Product does not exist with id: " + cartItem.getProductId());
+        }
+
+        if (product.getStock() == null || product.getStock() < cartItem.getQuantity()) {
+            throw new RuntimeException("Insufficient stock for product id: " + cartItem.getProductId());
+        }
 
         existingItem.setCartId(cartItem.getCartId());
         existingItem.setProductId(cartItem.getProductId());
@@ -62,8 +89,8 @@ public class CartItemServiceImpl implements CartItemService{
     }
 
     @Override
-    public void deleteCartItemsByCartId(Integer id) {
-        cartItemRepository.deleteById(id);
+    public void deleteCartItemsByCartId(Integer cartId) {
+        cartItemRepository.deleteByCartId(cartId);
     }
 
     @Override
