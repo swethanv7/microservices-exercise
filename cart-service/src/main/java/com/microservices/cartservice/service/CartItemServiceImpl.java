@@ -1,6 +1,7 @@
 package com.microservices.cartservice.service;
 
 import com.microservices.cartservice.dto.ProductDto;
+import com.microservices.cartservice.entity.CartEvent;
 import com.microservices.cartservice.entity.CartItem;
 import com.microservices.cartservice.repository.CartItemRepository;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,13 @@ public class CartItemServiceImpl implements CartItemService{
 
     private final ProductClient productClient;
 
+    private final CartEventProducer cartEventProducer;
+
     public CartItemServiceImpl(CartItemRepository cartItemRepository,
-                               ProductClient productClient) {
+                               ProductClient productClient, CartEventProducer cartEventProducer) {
         this.cartItemRepository = cartItemRepository;
         this.productClient = productClient;
+        this.cartEventProducer = cartEventProducer;
     }
 
     @Override
@@ -35,7 +39,17 @@ public class CartItemServiceImpl implements CartItemService{
             throw new RuntimeException("Insufficient stock for product id: " + cartItem.getProductId());
         }
 
-        return cartItemRepository.save(cartItem);
+        CartItem savedItem = cartItemRepository.save(cartItem);
+
+        CartEvent event = new CartEvent(
+                savedItem.getCartId(),
+                savedItem.getProductId(),
+                savedItem.getQuantity()
+        );
+
+        cartEventProducer.publishCartEvent(event);
+
+        return savedItem;
     }
 
     @Override
@@ -69,7 +83,17 @@ public class CartItemServiceImpl implements CartItemService{
         existingItem.setProductId(cartItem.getProductId());
         existingItem.setQuantity(cartItem.getQuantity());
 
-        return cartItemRepository.save(existingItem);
+        CartItem updatedItem = cartItemRepository.save(existingItem);
+
+        CartEvent event = new CartEvent(
+                updatedItem.getCartId(),
+                updatedItem.getProductId(),
+                updatedItem.getQuantity()
+        );
+
+        cartEventProducer.publishCartEvent(event);
+
+        return updatedItem;
     }
 
     @Override
