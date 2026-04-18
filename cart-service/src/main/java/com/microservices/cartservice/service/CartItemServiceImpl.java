@@ -13,31 +13,21 @@ public class CartItemServiceImpl implements CartItemService{
 
     private final CartItemRepository cartItemRepository;
 
-    private final ProductClient productClient;
+    private final CartAsyncValidationService cartAsyncValidationService;
 
     private final CartEventProducer cartEventProducer;
 
     public CartItemServiceImpl(CartItemRepository cartItemRepository,
-                               ProductClient productClient, CartEventProducer cartEventProducer) {
+                               CartEventProducer cartEventProducer, CartAsyncValidationService cartAsyncValidationService) {
         this.cartItemRepository = cartItemRepository;
-        this.productClient = productClient;
+        this.cartAsyncValidationService = cartAsyncValidationService;
         this.cartEventProducer = cartEventProducer;
     }
 
     @Override
     public CartItem addCartItem(CartItem cartItem) {
 
-        validateCartItem(cartItem);
-
-        ProductDto product = productClient.getProductById(cartItem.getProductId());
-
-        if (product == null) {
-            throw new RuntimeException("Product does not exist with id: " + cartItem.getProductId());
-        }
-
-        if (product.getStock() == null || product.getStock() < cartItem.getQuantity()) {
-            throw new RuntimeException("Insufficient stock for product id: " + cartItem.getProductId());
-        }
+        ProductDto product = cartAsyncValidationService.validateCartItemAsync(cartItem);
 
         CartItem savedItem = cartItemRepository.save(cartItem);
 
@@ -65,19 +55,10 @@ public class CartItemServiceImpl implements CartItemService{
 
     @Override
     public CartItem updateCartItem(Integer id, CartItem cartItem) {
+
         CartItem existingItem = getCartItemById(id);
 
-        validateCartItem(cartItem);
-
-        ProductDto product = productClient.getProductById(cartItem.getProductId());
-
-        if (product == null) {
-            throw new RuntimeException("Product does not exist with id: " + cartItem.getProductId());
-        }
-
-        if (product.getStock() == null || product.getStock() < cartItem.getQuantity()) {
-            throw new RuntimeException("Insufficient stock for product id: " + cartItem.getProductId());
-        }
+        ProductDto product = cartAsyncValidationService.validateCartItemAsync(cartItem);
 
         existingItem.setCartId(cartItem.getCartId());
         existingItem.setProductId(cartItem.getProductId());
@@ -122,21 +103,4 @@ public class CartItemServiceImpl implements CartItemService{
         return cartItemRepository.existsById(cartItemId);
     }
 
-    private void validateCartItem(CartItem cartItem) {
-        if (cartItem == null) {
-            throw new RuntimeException("CartItem cannot be null");
-        }
-
-        if (cartItem.getCartId() == null || cartItem.getCartId() <= 0) {
-            throw new RuntimeException("Invalid cartId");
-        }
-
-        if (cartItem.getProductId() == null || cartItem.getProductId() <= 0) {
-            throw new RuntimeException("Invalid productId");
-        }
-
-        if (cartItem.getQuantity() == null || cartItem.getQuantity() <= 0) {
-            throw new RuntimeException("Quantity must be greater than 0");
-        }
-    }
 }
