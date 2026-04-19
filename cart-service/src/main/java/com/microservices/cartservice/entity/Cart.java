@@ -1,8 +1,9 @@
 package com.microservices.cartservice.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.Generated;
+
 
 @Entity
 @Table(name = "carts")
@@ -13,5 +14,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "user_id")
+    @NotNull(message = "User ID Must not be NULL")
     private Integer userId;
 }

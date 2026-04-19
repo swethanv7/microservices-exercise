@@ -1,7 +1,11 @@
 package com.microservices.productservice.service;
 
 import com.microservices.productservice.entity.Product;
+import com.microservices.productservice.exception.BusinessException;
+import com.microservices.productservice.exception.ResourceNotFoundException;
 import com.microservices.productservice.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +17,8 @@ import java.util.List;
 @Service
 public class ProductServiceImpl implements ProductService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+
     private final ProductRepository productRepository;
 
     //Constructor Injection
@@ -23,55 +29,81 @@ public class ProductServiceImpl implements ProductService {
     // Create Product Logic
     @Override
     public Product createProduct(Product product) {
+        logger.info("Creating product");
+
         validateProduct(product);
-        return productRepository.save(product);
+
+        Product saved = productRepository.save(product);
+        logger.info("Product created with id: {}", saved.getId());
+
+        return saved;
     }
 
     // Get product by Product ID
     @Override
     public Product getProductById(Integer id) {
-       return productRepository.findById(id)
-               .orElseThrow(()-> new RuntimeException("Product not found with id: " + id));
+        logger.info("Fetching product by id: {}", id);
+
+        if (id == null || id <= 0) {
+            throw new BusinessException("Product id must be greater than 0");
+        }
+
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     //Get all the products
     @Override
     public List<Product> getAllProducts() {
+        logger.info("Fetching all products");
         return productRepository.findAll();
     }
 
     //Update the existing product details
     @Override
     public Product updateProduct(Integer id, Product product) {
-        Product existingProduct = getProductById(id);
+        logger.info("Updating product id: {}", id);
 
-        validateProduct(product); // To validate the product that we are getting from the user (similar to backend validation)
+        if (id == null || id <= 0) {
+            throw new BusinessException("Product id must be greater than 0");
+        }
 
-        existingProduct.setName(product.getName());
-        existingProduct.setPrice(product.getPrice());
-        existingProduct.setStock(product.getStock());
+        Product existing = getProductById(id);
+        validateProduct(product);
 
-        return productRepository.save(existingProduct);
+        existing.setName(product.getName());
+        existing.setPrice(product.getPrice());
+        existing.setStock(product.getStock());
+
+        return productRepository.save(existing);
     }
 
     // Delete the product by its ID
     @Override
     public void deleteProduct(Integer id) {
-        Product existingProduct = getProductById(id);
-        productRepository.delete(existingProduct);
+        logger.info("Deleting product id: {}", id);
+
+        if (id == null || id <= 0) {
+            throw new BusinessException("Product id must be greater than 0");
+        }
+
+        Product existing = getProductById(id);
+        productRepository.delete(existing);
     }
 
     // To check the stock of the product
     @Override
     public boolean validateStock(Integer productId, Integer quantity) {
+        logger.info("Validating stock for productId: {}", productId);
+
         Product product = getProductById(productId);
 
         if (quantity == null || quantity <= 0) {
-            throw new RuntimeException("Quantity must be greater than 0");
+            throw new BusinessException("Quantity must be greater than 0");
         }
 
         if (product.getStock() == null || product.getStock() < quantity) {
-            throw new RuntimeException("Insufficient stock for product id: " + productId);
+            throw new BusinessException("Insufficient stock for product id: " + productId);
         }
 
         return true;
@@ -118,19 +150,19 @@ public class ProductServiceImpl implements ProductService {
     // Method to Validate the Product
     private void validateProduct(Product product) {
         if (product == null) {
-            throw new RuntimeException("Product cannot be null");
+            throw new BusinessException("Product cannot be null");
         }
 
         if (product.getName() == null || product.getName().trim().isEmpty()) {
-            throw new RuntimeException("Product name cannot be null or empty");
+            throw new BusinessException("Product name cannot be null or empty");
         }
 
         if (product.getPrice() == null || product.getPrice() <= 0) {
-            throw new RuntimeException("Product price must be greater than 0");
+            throw new BusinessException("Product price must be greater than 0");
         }
 
         if (product.getStock() == null || product.getStock() < 0) {
-            throw new RuntimeException("Product stock cannot be negative");
+            throw new BusinessException("Product stock cannot be negative");
         }
     }
 }
