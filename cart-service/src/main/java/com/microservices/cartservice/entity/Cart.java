@@ -14,7 +14,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id")
+
     @NotNull(message = "User ID Must not be NULL")
     private Integer userId;
 }

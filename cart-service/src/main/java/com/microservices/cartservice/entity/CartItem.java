@@ -14,11 +14,11 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "cart-id")
+
     @NotNull(message = "Card ID  must not be NULL")
     private Integer cartId;
 
-    @Column(name = "product_id")
+
     @NotNull(message = "Product ID must not be NULL")
     private Integer productId;
 
